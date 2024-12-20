@@ -1,0 +1,28 @@
+# Ignore all .txt files
+*.txt
+
+# Ignore keys.json
+keys.json
+
+# Ignore all .Rproj files
+*.Rproj
+
+# Node.js dependencies
+node_modules/
+
+# Logs
+*.log
+
+# Build files
+build/
+
+# Docker
+*.env
+.dockerignore
+docker-compose.override.yml
+
+# R-related files
+.Rhistory
+.RData
+.Ruserdata
+.Rprofile

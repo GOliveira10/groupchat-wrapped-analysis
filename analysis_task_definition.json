@@ -1,0 +1,27 @@
+{
+    "family": "api-task",
+    "networkMode": "awsvpc",
+    "executionRoleArn": "arn:aws:iam::736703778145:role/ecsTaskExecutionRole",
+    "containerDefinitions": [
+      {
+        "name": "api-container",
+        "image": "736703778145.dkr.ecr.us-east-2.amazonaws.com/wrapped-analysis:latest",
+        "portMappings": [
+          {
+            "containerPort": 8000,
+            "hostPort": 8000,
+            "protocol": "tcp"
+          }
+        ],
+        "essential": true,
+        "memory": 512,
+        "cpu": 256
+      }
+    ],
+    "requiresCompatibilities": [
+      "FARGATE"
+    ],
+    "cpu": "256",
+    "memory": "512"
+  }
+  
