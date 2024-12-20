@@ -168,6 +168,7 @@ caption_handler <- function(caption_text, to_insert = ""){
 #* @apiDescription Accepts raw transcript and returns structured JSON data for visualization
 #* @post /analyze
 #* @param transcript:character The WhatsApp transcript as a single string (with newline chars)
+#* @param year:character Indicates the year over which to perform analysis
 function(transcript, year = '2024'){
 
   start_date <- as.Date(paste0(year,"-01-01"))
@@ -503,30 +504,10 @@ function(transcript){
   message_data <-
     tibble(lines = transcript) %>%
     mutate(date = trimws(str_extract(lines, "(?<=\\[\\s?).{8,}(?=\\s*\\])")),
-           sender = ifelse(!is.na(date), trimws(str_extract(lines, "(?<=\\]\\s?).*?(?=\\s*:)")), NA),
-           message = ifelse(!is.na(date), trimws(str_extract(lines, "(?<=[A-Za-z]{3}:\\s?).*$")), lines)) %>%
-    select(date, sender, message) %>%
-    mutate(sender = trimws(sender),
-           message = trimws(message),
-           date = parse_date_time(date, '%d/%m/%y, %I:%M:%S %p')) %>%
-    select(date, sender, message) %>%
-    fill(date, sender) %>%
-    group_by(date, sender) %>%
-    summarize(message = paste0(message, collapse = " ")) %>%
-    ungroup() %>%
-    filter(!sender %in% c('Meta AI', 'Enemies', 'America f')) %>%
-    mutate(sender = case_when(
-      sender == 'Cody' ~ 'Cody Anderson',
-      sender %in% c("🗿 🗿🗿", "‎ 🗿 🗿🗿", " ~ Brett", "~ Brett", "~Brett") ~ "Brett Graham",
-      TRUE ~ trimws(replace_non_ascii(sender, ""))
-    )) %>%
-    mutate(sender = case_when(
-      sender == "~Brett" ~ "Brett Graham",
-      sender == "~DD" ~ "Dan Dean",
-      sender == "Cody" ~ "Cody Anderson",
-      TRUE ~ sender
-    )) %>%
-    filter(sender != "Meta AI" & sender != "" & !str_detect(sender, "~"))
+           first_digit = max(as.numeric(str_extract(date, "^[0-9]{1,2}")))) %>%
+    mutate(date = case_when(first_digit > 12 ~ parse_date_time(date, '%d/%m/%y, %I:%M:%S %p'), 
+                          TRUE ~ parse_date_time(date, '%m/%d/%y, %I:%M:%S %p')))  %>%
+    select(date) 
 
   available_years <- message_data %>%
     transmute(years = year(date)) %>%
