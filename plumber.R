@@ -168,10 +168,10 @@ caption_handler <- function(caption_text, to_insert = ""){
 #* @apiDescription Accepts raw transcript and returns structured JSON data for visualization
 #* @post /analyze
 #* @param transcript:character The WhatsApp transcript as a single string (with newline chars)
-function(transcript){
+function(transcript, year = '2024'){
 
-  end_date <- as.Date("2025-01-01")
-  start_date <- as.Date("2024-01-01")
+  start_date <- as.Date(paste0(year,"-01-01"))
+  end_date <- start_date + years(1)
 
   transcript <- read_lines(transcript)
 
@@ -489,6 +489,52 @@ function(transcript){
     swears = swears,
     hangout = hangout
   )
+}
+
+
+#* @apiTitle WhatsApp Analysis API
+#* @apiDescription Accepts raw transcript and returns structured JSON data for visualization
+#* @post /available-years
+#* @param transcript:character The WhatsApp transcript as a single string (with newline chars)
+function(transcript){
+
+  transcript <- read_lines(transcript)
+
+  message_data <-
+    tibble(lines = transcript) %>%
+    mutate(date = trimws(str_extract(lines, "(?<=\\[\\s?).{8,}(?=\\s*\\])")),
+           sender = ifelse(!is.na(date), trimws(str_extract(lines, "(?<=\\]\\s?).*?(?=\\s*:)")), NA),
+           message = ifelse(!is.na(date), trimws(str_extract(lines, "(?<=[A-Za-z]{3}:\\s?).*$")), lines)) %>%
+    select(date, sender, message) %>%
+    mutate(sender = trimws(sender),
+           message = trimws(message),
+           date = parse_date_time(date, '%d/%m/%y, %I:%M:%S %p')) %>%
+    select(date, sender, message) %>%
+    fill(date, sender) %>%
+    group_by(date, sender) %>%
+    summarize(message = paste0(message, collapse = " ")) %>%
+    ungroup() %>%
+    filter(!sender %in% c('Meta AI', 'Enemies', 'America f')) %>%
+    mutate(sender = case_when(
+      sender == 'Cody' ~ 'Cody Anderson',
+      sender %in% c("🗿 🗿🗿", "‎ 🗿 🗿🗿", " ~ Brett", "~ Brett", "~Brett") ~ "Brett Graham",
+      TRUE ~ trimws(replace_non_ascii(sender, ""))
+    )) %>%
+    mutate(sender = case_when(
+      sender == "~Brett" ~ "Brett Graham",
+      sender == "~DD" ~ "Dan Dean",
+      sender == "Cody" ~ "Cody Anderson",
+      TRUE ~ sender
+    )) %>%
+    filter(sender != "Meta AI" & sender != "" & !str_detect(sender, "~"))
+
+  available_years <- message_data %>%
+    transmute(years = year(date)) %>%
+    distinct() %>%
+    pull()
+
+  list(available_years = sort(available_years[-1], decreasing = TRUE))
+
 }
 
 #* @filter cors
