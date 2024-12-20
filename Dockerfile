@@ -2,6 +2,7 @@ FROM rocker/r-ver:4.2.0
 
 RUN apt-get update && apt-get install -y \
     libcurl4-openssl-dev \
+    libsodium-dev \
     libssl-dev \
     libxml2-dev \
     libfontconfig1-dev \
