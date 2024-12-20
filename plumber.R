@@ -179,11 +179,12 @@ function(transcript){
     tibble(lines = transcript) %>%
     mutate(date = trimws(str_extract(lines, "(?<=\\[\\s?).{8,}(?=\\s*\\])")),
       sender = ifelse(!is.na(date), trimws(str_extract(lines, "(?<=\\]\\s?).*?(?=\\s*:)")), NA),
-           message = ifelse(!is.na(date), trimws(str_extract(lines, "(?<=[A-Za-z]{3}:\\s?).*$")), lines)) %>%
-    select(date, sender, message) %>%
+           message = ifelse(!is.na(date), trimws(str_extract(lines, "(?<=[A-Za-z]{3}:\\s?).*$")), lines),
+           first_digit = max(as.numeric(str_extract(date, "^[0-9]{1,2}")))) %>%
     mutate(sender = trimws(sender),
            message = trimws(message),
-           date = parse_date_time(date, '%d/%m/%y, %I:%M:%S %p')) %>%
+           date = case_when(first_digit > 12 ~ parse_date_time(date, '%d/%m/%y, %I:%M:%S %p'), 
+                          TRUE ~ parse_date_time(date, '%m/%d/%y, %I:%M:%S %p'))) %>%
     select(date, sender, message) %>%
     fill(date, sender) %>%
     group_by(date, sender) %>%
