@@ -6,7 +6,7 @@ library(textclean)
 library(httr)
 
 
-keys = jsonlite::read_json('keys.json')
+#keys = jsonlite::read_json('keys.json')
 
 detect_swearwords <- function(x){
   message <- tolower(x)
@@ -47,7 +47,7 @@ detect_hangout_ai <- function(message){
     url = "https://api.openai.com/v1/chat/completions",
     body = payload_json,
     encode = "json",
-    add_headers(Authorization = paste0("Bearer ", keys$`open-ai-key`),
+    add_headers(Authorization = paste0("Bearer ", OpenAIKey),
                 `Content-Type` = "application/json")
   )
 
@@ -97,7 +97,7 @@ summarize_day <- function(day_data){
     url = "https://api.openai.com/v1/chat/completions",
     body = payload_json,
     encode = "json",
-    add_headers(Authorization = paste0("Bearer ", keys$`open-ai-key`),
+    add_headers(Authorization = paste0("Bearer ", OpenAIKey),
                 `Content-Type` = "application/json")
   )
 
