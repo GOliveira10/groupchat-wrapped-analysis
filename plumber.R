@@ -8,6 +8,8 @@ library(httr)
 
 #keys = jsonlite::read_json('keys.json')
 
+OpenAIKey <- Sys.getenv("OpenAIKey")
+
 detect_swearwords <- function(x){
   message <- tolower(x)
   curse_words <- c("fuck", "shit", "bitch", "gay", "retard", "whore", "bastard", "cunt", "pussy", "dick", "cock", "jack off", "homo")
