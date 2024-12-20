@@ -17,4 +17,4 @@ RUN R -e "install.packages(c('plumber', 'tidyverse', 'ggplot2', 'lubridate', 'te
 COPY plumber.R /app/plumber.R
 
 EXPOSE 8000
-CMD [\"R\", \"-e\", \"pr <- plumber::pr('/app/plumber.R'); pr$run(host='0.0.0.0', port=8000)\"] 
+CMD ["R", "-e", "pr <- plumber::pr('/app/plumber.R'); pr$run(host='0.0.0.0', port=8000)"]
