@@ -185,10 +185,12 @@ function(transcript, year = '2024'){
            first_hour = max(as.numeric(str_extract(date, "(?<=\\s?)[0-9]{1,2}(?=\\s*:)")), na.rm = TRUE)) %>%
     mutate(sender = trimws(sender),
            message = trimws(message),
-         date = case_when(first_digit > 12 ~ case_when(first_hour <= 12 ~ parse_date_time(date, '%d/%m/%y, %I:%M:%S %p'), 
-                                                       first_hour > 12 ~ parse_date_time(date, '%d/%m/%y, %I:%M:%S')),
+           date = case_when(first_digit > 12 ~ case_when(first_hour <= 12 ~ parse_date_time(date, '%d/%m/%y, %I:%M:%S %p'), 
+                                                       first_hour > 12 ~ parse_date_time(date, '%d/%m/%y, %I:%M:%S'),
+                                                       TRUE ~ parse_date_time(date, 'ymd')),
                           first_digit <= 12 ~ case_when(first_hour <= 12 ~ parse_date_time(date, '%m/%d/%y, %I:%M:%S %p'), 
-                                                        first_hour > 12 ~ parse_date_time(date, '%m/%d/%y, %I:%M:%S')) 
+                                                        first_hour > 12 ~ parse_date_time(date, '%m/%d/%y, %I:%M:%S'),
+                                                        TRUE ~ parse_date_time(date, 'ymd')), 
                           TRUE ~ parse_date_time(date, 'ymd'))) %>%
     select(date, sender, message) %>%
     fill(date, sender) %>%
@@ -510,11 +512,14 @@ function(transcript){
     mutate(date = trimws(str_extract(lines, "(?<=\\[\\s?).{8,}(?=\\s*\\])")),
            first_digit = max(as.numeric(str_extract(date, "^[0-9]{1,2}")), na.rm = TRUE),
            first_hour = max(as.numeric(str_extract(date, "(?<=\\s?)[0-9]{1,2}(?=\\s*:)")), na.rm = TRUE)) %>%
-    mutate(date = case_when(first_digit > 12 ~ case_when(first_hour <= 12 ~ parse_date_time(date, '%d/%m/%y, %I:%M:%S %p'), 
-                                                       first_hour > 12 ~ parse_date_time(date, '%d/%m/%y, %I:%M:%S')),
-                          first_digit <= 12 ~ case_when(first_hour <= 12 ~ parse_date_time(date, '%m/%d/%y, %I:%M:%S %p'), 
-                                                        first_hour > 12 ~ parse_date_time(date, '%m/%d/%y, %I:%M:%S')) 
-                          TRUE ~ parse_date_time(date, 'ymd')))  %>%
+    mutate(
+      date = case_when(first_digit > 12 ~ case_when(first_hour <= 12 ~ parse_date_time(date, '%d/%m/%y, %I:%M:%S %p'), 
+                                                    first_hour > 12 ~ parse_date_time(date, '%d/%m/%y, %I:%M:%S'),
+                                                    TRUE ~ parse_date_time(date, 'ymd')),
+                      first_digit <= 12 ~ case_when(first_hour <= 12 ~ parse_date_time(date, '%m/%d/%y, %I:%M:%S %p'), 
+                                                    first_hour > 12 ~ parse_date_time(date, '%m/%d/%y, %I:%M:%S'),
+                                                    TRUE ~ parse_date_time(date, 'ymd')), 
+                      TRUE ~ parse_date_time(date, 'ymd')))  %>%
     select(date) 
 
   available_years <- message_data %>%
