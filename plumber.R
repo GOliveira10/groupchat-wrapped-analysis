@@ -522,6 +522,8 @@ function(transcript){
 
   transcript <- read_lines(transcript)
 
+  print(transcript)
+
   message_data <-
     tibble(lines = transcript) %>%
     mutate(date = trimws(str_extract(lines, "(?<=\\[\\s?).{8,}(?=\\s*\\])")),
