@@ -557,7 +557,11 @@ function(transcript){
     distinct() %>%
     pull()
 
-  list(available_years = sort(available_years[-1], decreasing = TRUE))
+  if(length(available_years) > 1){
+    available_years <- available_years[-1]
+  }
+
+  list(available_years = sort(available_years, decreasing = TRUE))
 
 }
 
