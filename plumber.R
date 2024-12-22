@@ -320,8 +320,19 @@ function(transcript, year = '2024', create_ai_summaries = TRUE){
   year_over_year_changes <- yearly_comparison_data %>%
     filter(percent_change == max(percent_change) | percent_change == min(percent_change))
 
+  if(max(year_over_year_changes$percent_change, na.rm = TRUE) <= 0){
+      caption = paste0("My goodness it looks like everyone has been less active in the chat this year. What are you too busy to chat with your pals? Do better :(") %>%
+      caption_handler()
+  } else if(min(year_over_year_changes$percent_change, na.rm = TRUE) >= 0){
+
+    caption = paste0("Wow! It looks like everyone contributed more to the chat this year than last year. Great work team, and kudos to ", year_over_year_changes$sender[1], " for leading the way. You're a legend.") %>%
+    caption_handler()
+
+  } else {
+
   caption = paste0("Wow, keep it up ", year_over_year_changes$sender[1], ", you really stepped up your game this year. ", year_over_year_changes$sender[2], ", this falloff will be studied." ) %>%
     caption_handler()
+  }
 
   yearly_comparison = list(data = yearly_comparison_data, caption = c(caption))
 
