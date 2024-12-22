@@ -196,10 +196,10 @@ function(transcript, year = '2024', create_ai_summaries = TRUE){
     mutate(sender = trimws(sender),
            message = trimws(message),
            date = case_when(first_digit > 12 ~ case_when(first_hour <= 12 ~ parse_date_time(date, '%d/%m/%y, %I:%M:%S %p'),
-                                                         first_hour > 12 ~ parse_date_time(date, '%d/%m/%y, %I:%M:%S'),
+                                                         first_hour > 12 ~ parse_date_time(date, '%d/%m/%y, %H:%M:%S'),
                                                          TRUE ~ parse_date_time(date, 'ymd')),
                             first_digit <= 12 ~ case_when(first_hour <= 12 ~ parse_date_time(date, '%m/%d/%y, %I:%M:%S %p'),
-                                                          first_hour > 12 ~ parse_date_time(date, '%m/%d/%y, %I:%M:%S'),
+                                                          first_hour > 12 ~ parse_date_time(date, '%m/%d/%y, %H:%M:%S'),
                                                           TRUE ~ parse_date_time(date, 'ymd')),
                             TRUE ~ parse_date_time(date, 'ymd'))) %>%
     select(date, sender, message) %>%
@@ -536,7 +536,6 @@ function(transcript){
 
   transcript <- read_lines(transcript)
 
-  print(transcript)
 
   message_data <-
     tibble(lines = transcript) %>%
@@ -545,10 +544,10 @@ function(transcript){
            first_hour = max(as.numeric(str_extract(date, "(?<=\\s?)[0-9]{1,2}(?=\\s*:)")), na.rm = TRUE)) %>%
     mutate(
       date = case_when(first_digit > 12 ~ case_when(first_hour <= 12 ~ parse_date_time(date, '%d/%m/%y, %I:%M:%S %p'),
-                                                    first_hour > 12 ~ parse_date_time(date, '%d/%m/%y, %I:%M:%S'),
+                                                    first_hour > 12 ~ parse_date_time(date, '%d/%m/%y, %H:%M:%S'),
                                                     TRUE ~ parse_date_time(date, 'ymd')),
                        first_digit <= 12 ~ case_when(first_hour <= 12 ~ parse_date_time(date, '%m/%d/%y, %I:%M:%S %p'),
-                                                     first_hour > 12 ~ parse_date_time(date, '%m/%d/%y, %I:%M:%S'),
+                                                     first_hour > 12 ~ parse_date_time(date, '%m/%d/%y, %H:%M:%S'),
                                                      TRUE ~ parse_date_time(date, 'ymd')),
                        TRUE ~ parse_date_time(date, 'ymd')))  %>%
     select(date)
