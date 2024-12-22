@@ -64,8 +64,20 @@ detect_hangout_ai <- function(message){
 
 summarize_day <- function(day_data){
   # Convert dataframe to text string, handling grouping
+
+  day_data <- day_data %>%
+    mutate(anon_names = paste0('Sender ', fct_anon(sender)))
+
+
+  day_data_for_summary <- day_data %>%
+    select(-sender) %>%
+    rename(sender = anon_names)
+
+  sender_names_map <- day_data %>%
+    select(sender, anon_names)
+
   day_data_string <- paste(
-    capture.output(print(day_data, row.names = FALSE)),  # Convert dataframe to text
+    capture.output(print(day_data_for_summary, row.names = FALSE)),  # Convert dataframe to text
     collapse = "\n"  # Combine rows with newlines
   )
 
@@ -115,7 +127,17 @@ summarize_day <- function(day_data){
 
   if (http_status(response)$category == "Success") {
     content <- content(response, as = "parsed")
-    message <- content$choices[[1]]$message$content
+
+    message_content <- content$choices[[1]]$message$content
+
+    for(i in c(1:nrow(sender_names_map))){
+
+      message <- str_replace_all(message, sender_names_map$anon_names[i], sender_names_map$sender[i])
+
+    }
+
+    message
+
     # Try to parse the JSON response
     tryCatch({
       parsed_message <- jsonlite::fromJSON(message) # Changed from 'summary' to 'message'
