@@ -77,8 +77,8 @@ summarize_day <- function(day_data){
   prompt <- paste0(
     "Please analyze all of the messages in this chat transcript from a day in a groupchat ",
     "and return a brief summary of what happened that day, including a title. ",
-    "The tone of the summary should be lighthearted and sarcastic if something funny happened, ",
-    "and comforting if something less fun happened. Return only the requested summary and a title for it",
+    "The tone of the summary should be sarcastic, in the tone and style of Norm MacDonald, ",
+    "but comforting and philosophical (also in the tone of Norm MacDonald), if something less fun happened. Return only the requested summary and a title for it",
     "with no additional commentary, context, formatting, or pleasantries. Return each summary as a json with two keys: title and summary.",
     day_data_string
   ) %>% gsub("\n", " ", .)
