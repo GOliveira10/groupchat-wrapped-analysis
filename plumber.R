@@ -137,7 +137,7 @@ summarize_day <- function(day_data){
 
     }
 
-    message
+    return(message)
 
     # Try to parse the JSON response
     tryCatch({
