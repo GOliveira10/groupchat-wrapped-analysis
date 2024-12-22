@@ -347,7 +347,7 @@ function(transcript, year = '2024', create_ai_summaries = TRUE){
   #                                list(date = "2024-06-19",
   #                                     content = list(title = "Summary #3", summary = "blah blah blah")))
 
-  if(create_ai_summaries){
+  if(!create_ai_summaries){
   top_three_days_summary <- list()
 
   for (i in c(1:length(top_three_days))){
@@ -369,7 +369,7 @@ function(transcript, year = '2024', create_ai_summaries = TRUE){
   caption <- "Here we see the most active days in the chat. Boy were they some big ones! What happened on those days?" %>%
     caption_handler()
 
-  if(create_ai_summaries){
+  if(!create_ai_summaries){
     top_ten_days = list(data = top_ten_days_data, caption = c(caption), day_summaries = top_three_days_summary)
   } else{
     top_ten_days = list(data = top_ten_days_data, caption = c(caption))
