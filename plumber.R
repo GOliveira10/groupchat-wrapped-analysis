@@ -137,8 +137,6 @@ summarize_day <- function(day_data){
 
     }
 
-    return(message)
-
     # Try to parse the JSON response
     tryCatch({
       parsed_message <- jsonlite::fromJSON(message) # Changed from 'summary' to 'message'
