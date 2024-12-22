@@ -57,7 +57,7 @@ detect_hangout_ai <- function(message){
     content <- content(response, as = "parsed")
     message <- content$choices[[1]]$message$content
     return(message)
-}
+  }
 }
 
 
@@ -73,12 +73,22 @@ summarize_day <- function(day_data){
   day_data_string <- gsub("\n", " ", day_data_string)   # Replace newlines with spaces
   day_data_string <- gsub('"', '\\"', day_data_string)  # Escape quotes
 
+
+  tone_of_voice <- sample(c('Norm Macdonald', 'a medieval bard', 'Ozzy Osbourne', 'Plato', 'Werner Herzog', 'Tony Soprano', 'Dave Chappelle', 'Dr. Seuss',
+                            'Hunter S. Thompson', 'Emily Dickenson', 'Abraham Lincoln', 'Donald Trump'), 1)
+
   # Create the prompt
   prompt <- paste0(
     "Please analyze all of the messages in this chat transcript from a day in a groupchat ",
     "and return a brief summary of what happened that day, including a title. ",
-    "The tone of the summary should be sarcastic, in the tone and style of Norm MacDonald, ",
-    "but comforting and philosophical (also in the tone of Norm MacDonald), if something less fun happened. Return only the requested summary and a title for it",
+    "The tone of the summary should be written in the style of ",
+    tone_of_voice,
+    "Be concise as well as funny. Stick to character, be verbose only if your tone of voice character is verbose, be concise if they are concise, be obscene if they are typically obscene. Reference specific events in the chat and don't say things like 'Ah, what a day in groupchat frivolity' or corny bullshit like that. Avoid metaphors and euphemisms, make fun of specific things.",
+    " TALK ABOUT WHAT HAPPENED! DON'T JUST SAY IT WAS A HILARIOUS TURN OF EVENTS or something vague like that. Include direct quotes from chats that seem funny. You need to comprehensively summarize the day of chats while also being concise. Don't summarize the summary. Don't say something like 'All in all, it was a wild day of frivolous angst and jests' at the end of the summary, for example.",
+    " Do not start the summary with words like 'So, ' or 'Well, '.",
+    "Remember that you are speaking in the tone of voice of ",
+    tone_of_voice,
+    ". It's very important that the tone of voice is recognizable, but don't state who you are speaking as in the text. Return only the requested summary and a title for it",
     "with no additional commentary, context, formatting, or pleasantries. Return each summary as a json with two keys: title and summary.",
     day_data_string
   ) %>% gsub("\n", " ", .)
@@ -179,20 +189,21 @@ function(transcript, year = '2024'){
   message_data <-
     tibble(lines = transcript) %>%
     mutate(date = trimws(str_extract(lines, "(?<=\\[\\s?).{8,}(?=\\s*\\])")),
-      sender = ifelse(!is.na(date), trimws(str_extract(lines, "(?<=\\]\\s?).*?(?=\\s*:)")), NA),
+           sender = ifelse(!is.na(date), trimws(str_extract(lines, "(?<=\\]\\s?).*?(?=\\s*:)")), NA),
            message = ifelse(!is.na(date), trimws(str_extract(lines, "(?<=[A-Za-z]{3}:\\s?).*$")), lines),
            first_digit = max(as.numeric(str_extract(date, "^[0-9]{1,2}")), na.rm=TRUE),
            first_hour = max(as.numeric(str_extract(date, "(?<=\\s?)[0-9]{1,2}(?=\\s*:)")), na.rm = TRUE)) %>%
     mutate(sender = trimws(sender),
            message = trimws(message),
-           date = case_when(first_digit > 12 ~ case_when(first_hour <= 12 ~ parse_date_time(date, '%d/%m/%y, %I:%M:%S %p'), 
-                                                       first_hour > 12 ~ parse_date_time(date, '%d/%m/%y, %I:%M:%S'),
-                                                       TRUE ~ parse_date_time(date, 'ymd')),
-                          first_digit <= 12 ~ case_when(first_hour <= 12 ~ parse_date_time(date, '%m/%d/%y, %I:%M:%S %p'), 
-                                                        first_hour > 12 ~ parse_date_time(date, '%m/%d/%y, %I:%M:%S'),
-                                                        TRUE ~ parse_date_time(date, 'ymd')), 
-                          TRUE ~ parse_date_time(date, 'ymd'))) %>%
+           date = case_when(first_digit > 12 ~ case_when(first_hour <= 12 ~ parse_date_time(date, '%d/%m/%y, %I:%M:%S %p'),
+                                                         first_hour > 12 ~ parse_date_time(date, '%d/%m/%y, %I:%M:%S'),
+                                                         TRUE ~ parse_date_time(date, 'ymd')),
+                            first_digit <= 12 ~ case_when(first_hour <= 12 ~ parse_date_time(date, '%m/%d/%y, %I:%M:%S %p'),
+                                                          first_hour > 12 ~ parse_date_time(date, '%m/%d/%y, %I:%M:%S'),
+                                                          TRUE ~ parse_date_time(date, 'ymd')),
+                            TRUE ~ parse_date_time(date, 'ymd'))) %>%
     select(date, sender, message) %>%
+    mutate(message = ifelse(str_detect(message, 'audio omitted'), '[User sent a voice note, which is omitted]', message)) %>%
     fill(date, sender) %>%
     group_by(date, sender) %>%
     summarize(message = paste0(message, collapse = " ")) %>%
@@ -338,14 +349,18 @@ function(transcript, year = '2024'){
 
 
   top_three_days_summary <- list()
+
   for (i in c(1:length(top_three_days))){
 
-    day_summary <- message_data %>%
-    filter(as.Date(date) == as.Date(top_three_days[i], origin = "1970-01-01")) %>%
+    chat_log <- message_data %>%
+      filter(as.Date(date) == as.Date(top_three_days[i], origin = "1970-01-01"))
+
+    day_summary <- chat_log %>%
       summarize_day()
 
     day_summary = list(date = strftime(as.Date(top_three_days[i], origin = "1970-01-01"), format = "%B %d, %Y"),
-                       content = day_summary)
+                       content = day_summary,
+                       chat_logs = chat_log)
 
     top_three_days_summary[[i]] <- day_summary
   }
@@ -513,14 +528,14 @@ function(transcript){
            first_digit = max(as.numeric(str_extract(date, "^[0-9]{1,2}")), na.rm = TRUE),
            first_hour = max(as.numeric(str_extract(date, "(?<=\\s?)[0-9]{1,2}(?=\\s*:)")), na.rm = TRUE)) %>%
     mutate(
-      date = case_when(first_digit > 12 ~ case_when(first_hour <= 12 ~ parse_date_time(date, '%d/%m/%y, %I:%M:%S %p'), 
+      date = case_when(first_digit > 12 ~ case_when(first_hour <= 12 ~ parse_date_time(date, '%d/%m/%y, %I:%M:%S %p'),
                                                     first_hour > 12 ~ parse_date_time(date, '%d/%m/%y, %I:%M:%S'),
                                                     TRUE ~ parse_date_time(date, 'ymd')),
-                      first_digit <= 12 ~ case_when(first_hour <= 12 ~ parse_date_time(date, '%m/%d/%y, %I:%M:%S %p'), 
-                                                    first_hour > 12 ~ parse_date_time(date, '%m/%d/%y, %I:%M:%S'),
-                                                    TRUE ~ parse_date_time(date, 'ymd')), 
-                      TRUE ~ parse_date_time(date, 'ymd')))  %>%
-    select(date) 
+                       first_digit <= 12 ~ case_when(first_hour <= 12 ~ parse_date_time(date, '%m/%d/%y, %I:%M:%S %p'),
+                                                     first_hour > 12 ~ parse_date_time(date, '%m/%d/%y, %I:%M:%S'),
+                                                     TRUE ~ parse_date_time(date, 'ymd')),
+                       TRUE ~ parse_date_time(date, 'ymd')))  %>%
+    select(date)
 
   available_years <- message_data %>%
     transmute(years = year(date)) %>%
