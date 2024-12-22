@@ -179,7 +179,7 @@ caption_handler <- function(caption_text, to_insert = ""){
 #* @post /analyze
 #* @param transcript:character The WhatsApp transcript as a single string (with newline chars)
 #* @param year:character Indicates the year over which to perform analysis
-function(transcript, year = '2024'){
+function(transcript, year = '2024', create_ai_summaries = TRUE){
 
   start_date <- as.Date(paste0(year,"-01-01"))
   end_date <- start_date + years(1)
@@ -347,7 +347,7 @@ function(transcript, year = '2024'){
   #                                list(date = "2024-06-19",
   #                                     content = list(title = "Summary #3", summary = "blah blah blah")))
 
-
+  if(create_ai_summaries){
   top_three_days_summary <- list()
 
   for (i in c(1:length(top_three_days))){
@@ -364,13 +364,16 @@ function(transcript, year = '2024'){
 
     top_three_days_summary[[i]] <- day_summary
   }
-
+  }
 
   caption <- "Here we see the most active days in the chat. Boy were they some big ones! What happened on those days?" %>%
     caption_handler()
 
-  top_ten_days = list(data = top_ten_days_data, caption = c(caption), day_summaries = top_three_days_summary)
-
+  if(create_ai_summaries){
+    top_ten_days = list(data = top_ten_days_data, caption = c(caption), day_summaries = top_three_days_summary)
+  } else{
+    top_ten_days = list(data = top_ten_days_data, caption = c(caption))
+  }
   # Manic data
   manic_data <- message_data %>%
     filter(date >= start_date & date <= end_date) %>%
