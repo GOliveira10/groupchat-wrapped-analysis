@@ -74,7 +74,8 @@ summarize_day <- function(day_data){
     rename(sender = anon_names)
 
   sender_names_map <- day_data %>%
-    select(sender, anon_names)
+    select(sender, anon_names) %>%
+    distinct()
 
   day_data_string <- paste(
     capture.output(print(day_data_for_summary, row.names = FALSE)),  # Convert dataframe to text
@@ -128,7 +129,7 @@ summarize_day <- function(day_data){
   if (http_status(response)$category == "Success") {
     content <- content(response, as = "parsed")
 
-    message_content <- content$choices[[1]]$message$content
+    message <- content$choices[[1]]$message$content
 
     for(i in c(1:nrow(sender_names_map))){
 
