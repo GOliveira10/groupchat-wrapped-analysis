@@ -128,23 +128,25 @@ summarize_day <- function(day_data){
 
   if (http_status(response)$category == "Success") {
     content <- content(response, as = "parsed")
-
+    
     message <- content$choices[[1]]$message$content
-
-    for(i in c(1:nrow(sender_names_map))){
-
-      message <- str_replace_all(message, sender_names_map$anon_names[i], sender_names_map$sender[i])
-
-    }
-
-    # Try to parse the JSON response
+    
     tryCatch({
       parsed_message <- jsonlite::fromJSON(message) # Changed from 'summary' to 'message'
-      return(parsed_message)
     }, error = function(e) {
       warning("Failed to parse JSON response: ", e$message)
       return(list(title = "Error", summary = "Failed to generate summary"))
     })
+    
+    
+    for(i in c(1:nrow(sender_names_map))){
+      
+      parsed_message$summary <- str_replace_all(parsed_message$summary, sender_names_map$anon_names[i], sender_names_map$sender[i])
+      
+    }
+    
+    return(parsed_message)
+
   } else {
     warning("API request failed: ", content(response, as = "text"))
     return(list(title = "Error", summary = "Failed to generate summary"))
