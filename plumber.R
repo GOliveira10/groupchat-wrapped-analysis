@@ -76,6 +76,9 @@ summarize_day <- function(day_data){
   sender_names_map <- day_data %>%
     select(sender, anon_names) %>%
     distinct()
+  
+  sender_names_vector <- sender_names_map$sender
+  names(sender_names_vector) <- sender_names_map$anon_names
 
   day_data_string <- paste(
     capture.output(print(day_data_for_summary, row.names = FALSE)),  # Convert dataframe to text
@@ -139,11 +142,7 @@ summarize_day <- function(day_data){
     })
     
     
-    for(i in c(1:nrow(sender_names_map))){
-      
-      parsed_message$summary <- str_replace_all(parsed_message$summary, sender_names_map$anon_names[i], sender_names_map$sender[i])
-      
-    }
+    parsed_message$summary <- str_replace_all(parsed_message$summary, sender_names_vector)
     
     return(parsed_message)
 
