@@ -66,16 +66,19 @@ summarize_day <- function(day_data){
   # Convert dataframe to text string, handling grouping
 
   day_data <- day_data %>%
-    mutate(anon_names = paste0('Sender ', fct_anon(sender)))
-
-
+    mutate(factor_number = fct_anon(sender),
+           anon_names = paste0('Sender ', factor_number))
+  
+  
   day_data_for_summary <- day_data %>%
-    select(-sender) %>%
+    select(-sender, -factor_number) %>%
     rename(sender = anon_names)
-
+  
   sender_names_map <- day_data %>%
-    select(sender, anon_names) %>%
-    distinct()
+    select(sender, anon_names, factor_number) %>%
+    distinct() %>%
+    arrange(desc(factor_number)) %>%
+    select(-factor_number)
   
   sender_names_vector <- sender_names_map$sender
   names(sender_names_vector) <- sender_names_map$anon_names
