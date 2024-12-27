@@ -81,7 +81,7 @@ summarize_day <- function(day_data){
     select(-factor_number)
   
   sender_names_vector <- sender_names_map$sender
-  names(sender_names_vector) <- sender_names_map$anon_names
+  names(sender_names_vector) <- paste0("\\b", sender_names_map$anon_names, "\\b")
 
   day_data_string <- paste(
     capture.output(print(day_data_for_summary, row.names = FALSE)),  # Convert dataframe to text
