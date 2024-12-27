@@ -63,32 +63,38 @@ detect_hangout_ai <- function(message){
 
 
 summarize_day <- function(day_data){
-  # Convert dataframe to text string, handling grouping
+  
+  # Anonymize transcripts before sending to OpenAI
 
+  # Top 100 boys and girls names
 
   girls <- c("Olivia", "Amelia", "Emma", "Sophia", "Charlotte", "Isabella", "Ava", "Mia", "Ellie", "Luna", "Harper", "Aurora", "Evelyn", "Eliana", "Aria", "Violet", "Nova", "Lily", "Camila", "Gianna", "Mila", "Sofia", "Hazel", "Scarlett", "Ivy", "Ella", "Willow", "Layla", "Avery", "Eleanor", "Elena", "Nora", "Chloe", "Penelope", "Elizabeth", "Abigail", "Delilah", "Riley", "Isla", "Lainey", "Paisley", "Lucy", "Emilia", "Stella", "Grace", "Maya", "Naomi", "Ayla", "Emily", "Leilani", "Athena", "Zoey", "Kinsley", "Iris", "Victoria", "Madison", "Zoe", "Sophie", "Valentina", "Alice", "Aaliyah", "Autumn", "Sadie", "Addison", "Adeline", "Eden", "Hannah", "Emery", "Amara", "Ruby", "Brooklyn", "Bella", "Melody", "Serenity", "Everly", "Gabriella", "Millie", "Raelynn", "Josie", "Nevaeh", "Daisy", "Lyla", "Lillian", "Skylar", "Maria", "Natalie", "Leah", "Kennedy", "Jade", "Ember", "Madelyn", "Clara", "Hailey", "Anna", "Savannah", "Oakley", "Audrey", "Brielle", "Cora", "Liliana")
 
   boys <- c("Noah", "Liam", "Oliver", "Elijah", "Mateo", "Lucas", "Levi", "Ezra", "Asher", "Leo", "James", "Luca", "Henry", "Hudson", "Ethan", "Muhammad", "Maverick", "Theodore", "Grayson", "Daniel", "Michael", "Jack", "Benjamin", "Elias", "Sebastian", "Kai", "Theo", "Wyatt", "Gabriel", "Mason", "Samuel", "Alexander", "Jackson", "William", "Carter", "Owen", "David", "Aiden", "Josiah", "Luke", "Julian", "Santiago", "Ezekiel", "Isaiah", "Waylon", "Miles", "Isaac", "John", "Logan", "Matthew", "Jacob", "Caleb", "Jayden", "Roman", "Joseph", "Nathan", "Anthony", "Cooper", "Enzo", "Weston", "Nolan", "Thomas", "Adam", "Eli", "Lincoln", "Micah", "Silas", "Amir", "Joshua", "Rowan", "Beau", "Atlas", "Wesley", "Luka", "Jaxon", "Jeremiah", "Adrian", "Xavier", "Walker", "Cameron", "Christopher", "Colton", "Charlie", "Bennett", "Brooks", "Myles", "Andrew", "Jace", "River", "Ryan", "Zion", "Easton", "Everett", "Axel", "Parker", "Greyson", "Hunter", "Christian", "Max", "Adriel")
 
-  anon_names <- c(girls, boys)
+  anon_names <- sort(c(girls, boys))
   
+
+  # Find all unique sender names
+
   sender_names_unique <- day_data %>% 
   select(sender) %>%
   distinct()
 
-  sender_names_unique <- sender_names_unique %>%
+  # Give them all one of the top names
+
+  sender_names_map <- sender_names_unique %>%
   mutate(anon_names = anon_names[c(1:nrow(sender_names_unique))])
   
   day_data <- day_data %>%
-  left_join(sender_names_unique, by = "sender")
+  left_join(sender_names_map, by = "sender")
 
+
+  # Replace sender name with anonymous name and break it down into a string to go to the API
   day_data_for_summary <- day_data %>%
     select(-sender) %>%
     rename(sender = anon_names)
   
-  sender_names_map <- day_data %>%
-    select(sender, anon_names) %>%
-    distinct() 
 
   day_data_string <- paste(
     capture.output(print(day_data_for_summary, row.names = FALSE)),  # Convert dataframe to text
@@ -99,9 +105,11 @@ summarize_day <- function(day_data){
   day_data_string <- gsub("\n", " ", day_data_string)   # Replace newlines with spaces
   day_data_string <- gsub('"', '\\"', day_data_string)  # Escape quotes
 
+  # Unfortunately it's pretty hard to just tell GPT to "be funny." It stinks no matter how hard you try to coach it
+  # It's a lot better if you give it a known model to emulate
 
   tone_of_voice <- sample(c('Norm Macdonald', 'a medieval bard', 'Ozzy Osbourne', 'Plato', 'Werner Herzog', 'Tony Soprano', 'Dave Chappelle', 'Dr. Seuss',
-                            'Hunter S. Thompson', 'Emily Dickenson', 'Abraham Lincoln', 'Donald Trump'), 1)
+                            'Hunter S. Thompson', 'Emily Dickenson', 'Barack Obama', 'Abraham Lincoln', 'Donald Trump'), 1)
 
   # Create the prompt
   prompt <- paste0(
@@ -152,6 +160,8 @@ summarize_day <- function(day_data){
       return(list(title = "Error", summary = "Failed to generate summary"))
     })
     
+    # Find all the anonymous names and replace with the originals to send up to the FE.
+
     for(i in c(1:nrow(sender_names_map))){
 
       parsed_message$summary <- str_replace_all(parsed_message$summary, paste0("\\b", sender_names_map$anon_names[i], "\\b"), sender_names_map$sender[i])
