@@ -66,21 +66,28 @@ summarize_day <- function(day_data){
   # Convert dataframe to text string, handling grouping
 
 
+  girls <- c("Olivia", "Amelia", "Emma", "Sophia", "Charlotte", "Isabella", "Ava", "Mia", "Ellie", "Luna", "Harper", "Aurora", "Evelyn", "Eliana", "Aria", "Violet", "Nova", "Lily", "Camila", "Gianna", "Mila", "Sofia", "Hazel", "Scarlett", "Ivy", "Ella", "Willow", "Layla", "Avery", "Eleanor", "Elena", "Nora", "Chloe", "Penelope", "Elizabeth", "Abigail", "Delilah", "Riley", "Isla", "Lainey", "Paisley", "Lucy", "Emilia", "Stella", "Grace", "Maya", "Naomi", "Ayla", "Emily", "Leilani", "Athena", "Zoey", "Kinsley", "Iris", "Victoria", "Madison", "Zoe", "Sophie", "Valentina", "Alice", "Aaliyah", "Autumn", "Sadie", "Addison", "Adeline", "Eden", "Hannah", "Emery", "Amara", "Ruby", "Brooklyn", "Bella", "Melody", "Serenity", "Everly", "Gabriella", "Millie", "Raelynn", "Josie", "Nevaeh", "Daisy", "Lyla", "Lillian", "Skylar", "Maria", "Natalie", "Leah", "Kennedy", "Jade", "Ember", "Madelyn", "Clara", "Hailey", "Anna", "Savannah", "Oakley", "Audrey", "Brielle", "Cora", "Liliana")
+
+  boys <- c("Noah", "Liam", "Oliver", "Elijah", "Mateo", "Lucas", "Levi", "Ezra", "Asher", "Leo", "James", "Luca", "Henry", "Hudson", "Ethan", "Muhammad", "Maverick", "Theodore", "Grayson", "Daniel", "Michael", "Jack", "Benjamin", "Elias", "Sebastian", "Kai", "Theo", "Wyatt", "Gabriel", "Mason", "Samuel", "Alexander", "Jackson", "William", "Carter", "Owen", "David", "Aiden", "Josiah", "Luke", "Julian", "Santiago", "Ezekiel", "Isaiah", "Waylon", "Miles", "Isaac", "John", "Logan", "Matthew", "Jacob", "Caleb", "Jayden", "Roman", "Joseph", "Nathan", "Anthony", "Cooper", "Enzo", "Weston", "Nolan", "Thomas", "Adam", "Eli", "Lincoln", "Micah", "Silas", "Amir", "Joshua", "Rowan", "Beau", "Atlas", "Wesley", "Luka", "Jaxon", "Jeremiah", "Adrian", "Xavier", "Walker", "Cameron", "Christopher", "Colton", "Charlie", "Bennett", "Brooks", "Myles", "Andrew", "Jace", "River", "Ryan", "Zion", "Easton", "Everett", "Axel", "Parker", "Greyson", "Hunter", "Christian", "Max", "Adriel")
+
+  anon_names <- c(girls, boys)
+  
+  sender_names_unique <- select(sender) %>%
+  distinct()
+
+  sender_names_unique <- sender_names_unique %>%
+  mutate(anon_names = anon_names[c(1:nrow(sender_names_unique))])
+  
   day_data <- day_data %>%
-    mutate(factor_number = fct_anon(sender),
-           anon_names = paste0('Person ', factor_number))
-  
-  
+  left_join(sender_names_unique, by = "sender")
+
   day_data_for_summary <- day_data %>%
-    select(-sender, -factor_number) %>%
+    select(-sender) %>%
     rename(sender = anon_names)
   
   sender_names_map <- day_data %>%
-    select(sender, anon_names, factor_number) %>%
-    distinct() %>%
-    arrange(desc(factor_number)) %>%
-    select(-factor_number)
-  
+    select(sender, anon_names) %>%
+    distinct() 
 
   day_data_string <- paste(
     capture.output(print(day_data_for_summary, row.names = FALSE)),  # Convert dataframe to text
@@ -98,7 +105,7 @@ summarize_day <- function(day_data){
   # Create the prompt
   prompt <- paste0(
     "Please analyze all of the messages in this chat transcript from a day in a groupchat ",
-    "and return a brief summary of what happened that day, including a title. Sender names are anonymized, but in your response refer to them specifically as Person 1, Person 2, or whatever their anonymous designation is in full. Don't be vague and say 'someone'.",
+    "and return a brief summary of what happened that day, including a title. Use their full sender name in the sender column when you refer to them in the summary, don't be vague and say 'someone' or change their name to something else.",
     "The tone of the summary should be written in the style of ",
     tone_of_voice,
     "Be concise as well as funny. Stick to character, be verbose only if your tone of voice character is verbose, be concise if they are concise, be obscene if they are typically obscene. Reference specific events in the chat and don't say things like 'Ah, what a day in groupchat frivolity' or corny bullshit like that. Avoid metaphors and euphemisms, make fun of specific things.",
