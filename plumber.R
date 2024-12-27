@@ -106,7 +106,7 @@ summarize_day <- function(day_data){
   # Create the prompt
   prompt <- paste0(
     "Please analyze all of the messages in this chat transcript from a day in a groupchat ",
-    "and return a brief summary of what happened that day, including a title. Use their full sender name in the sender column when you refer to them in the summary, don't be vague and say 'someone' or change their name to something else.",
+    "and return a brief summary of what happened that day, including a title. Use their full sender name in the sender column when you refer to them in the summary, don't be vague and say 'someone' or change their name to something else. Use gender neutral pronouns when describing a sender's actions.",
     "The tone of the summary should be written in the style of ",
     tone_of_voice,
     "Be concise as well as funny. Stick to character, be verbose only if your tone of voice character is verbose, be concise if they are concise, be obscene if they are typically obscene. Reference specific events in the chat and don't say things like 'Ah, what a day in groupchat frivolity' or corny bullshit like that. Avoid metaphors and euphemisms, make fun of specific things.",
