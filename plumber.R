@@ -65,6 +65,7 @@ detect_hangout_ai <- function(message){
 summarize_day <- function(day_data){
   # Convert dataframe to text string, handling grouping
 
+
   day_data <- day_data %>%
     mutate(factor_number = fct_anon(sender),
            anon_names = paste0('Person ', factor_number))
@@ -80,8 +81,6 @@ summarize_day <- function(day_data){
     arrange(desc(factor_number)) %>%
     select(-factor_number)
   
-  sender_names_vector <- sender_names_map$sender
-  names(sender_names_vector) <- paste0("\\b", sender_names_map$anon_names, "\\b")
 
   day_data_string <- paste(
     capture.output(print(day_data_for_summary, row.names = FALSE)),  # Convert dataframe to text
@@ -135,6 +134,7 @@ summarize_day <- function(day_data){
   if (http_status(response)$category == "Success") {
     content <- content(response, as = "parsed")
     
+
     message <- content$choices[[1]]$message$content
     
     tryCatch({
@@ -144,8 +144,12 @@ summarize_day <- function(day_data){
       return(list(title = "Error", summary = "Failed to generate summary"))
     })
     
+    for(i in c(1:nrow(sender_names_map))){
+
+      parsed_message$summary <- str_replace_all(parsed_message$summary, paste0("\\b", sender_names_map$anon_names[i], "\\b"), sender_names_map$sender[i])
+
+    }
     
-    parsed_message$summary <- str_replace_all(parsed_message$summary, sender_names_vector)
     
     return(parsed_message)
 
