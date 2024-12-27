@@ -72,7 +72,8 @@ summarize_day <- function(day_data){
 
   anon_names <- c(girls, boys)
   
-  sender_names_unique <- select(sender) %>%
+  sender_names_unique <- day_data %>% 
+  select(sender) %>%
   distinct()
 
   sender_names_unique <- sender_names_unique %>%
