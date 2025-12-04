@@ -13,9 +13,15 @@ RUN apt-get update && apt-get install -y \
     libtiff5-dev \
     libjpeg-dev
 
-RUN R -e "install.packages(c('plumber', 'tidyverse', 'ggplot2', 'lubridate', 'textclean', 'httr'), repos='https://cloud.r-project.org')"
+# --- Cache buster arg ---
+ARG CACHE_BUSTER=1
+
+# Force rebuild of R package installation when CACHE_BUSTER changes
+RUN echo "Cache bust: $CACHE_BUSTER" && \
+    R -e "install.packages(c('plumber', 'tidyverse', 'ggplot2', 'lubridate', 'textclean', 'httr'), repos='https://cloud.r-project.org')"
 
 COPY plumber.R /app/plumber.R
 
 EXPOSE 8000
 CMD ["R", "-e", "pr <- plumber::pr('./app/plumber.R'); pr$run(host='0.0.0.0', port=8000)"]
+

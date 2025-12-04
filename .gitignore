@@ -1,6 +1,8 @@
 # Ignore all .txt files
 *.txt
 
+*.DS_Store
+
 # Ignore keys.json
 keys.json
 
