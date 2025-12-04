@@ -35,7 +35,7 @@ detect_hangout_ai <- function(message){
 
   # Create the JSON payload
   payload <- list(
-    model = "gpt-3.5-turbo", # Changed from gpt-4o-mini to gpt-4
+    model = "gpt-5-nano", # Changed from gpt-4o-mini to gpt-4
     messages = list(
       list(role = "user", content = prompt)
     )
@@ -62,12 +62,13 @@ detect_hangout_ai <- function(message){
 
 
 
-summarize_day <- function(day_data){
+summarize_day <- function(day_data, anon_names = F){
   
   # Anonymize transcripts before sending to OpenAI
 
   # Top 100 boys and girls names
 
+  if(anon_names){
   girls <- c("Olivia", "Amelia", "Emma", "Sophia", "Charlotte", "Isabella", "Ava", "Mia", "Ellie", "Luna", "Harper", "Aurora", "Evelyn", "Eliana", "Aria", "Violet", "Nova", "Lily", "Camila", "Gianna", "Mila", "Sofia", "Hazel", "Scarlett", "Ivy", "Ella", "Willow", "Layla", "Avery", "Eleanor", "Elena", "Nora", "Chloe", "Penelope", "Elizabeth", "Abigail", "Delilah", "Riley", "Isla", "Lainey", "Paisley", "Lucy", "Emilia", "Stella", "Grace", "Maya", "Naomi", "Ayla", "Emily", "Leilani", "Athena", "Zoey", "Kinsley", "Iris", "Victoria", "Madison", "Zoe", "Sophie", "Valentina", "Alice", "Aaliyah", "Autumn", "Sadie", "Addison", "Adeline", "Eden", "Hannah", "Emery", "Amara", "Ruby", "Brooklyn", "Bella", "Melody", "Serenity", "Everly", "Gabriella", "Millie", "Raelynn", "Josie", "Nevaeh", "Daisy", "Lyla", "Lillian", "Skylar", "Maria", "Natalie", "Leah", "Kennedy", "Jade", "Ember", "Madelyn", "Clara", "Hailey", "Anna", "Savannah", "Oakley", "Audrey", "Brielle", "Cora", "Liliana")
 
   boys <- c("Noah", "Liam", "Oliver", "Elijah", "Mateo", "Lucas", "Levi", "Ezra", "Asher", "Leo", "James", "Luca", "Henry", "Hudson", "Ethan", "Muhammad", "Maverick", "Theodore", "Grayson", "Daniel", "Michael", "Jack", "Benjamin", "Elias", "Sebastian", "Kai", "Theo", "Wyatt", "Gabriel", "Mason", "Samuel", "Alexander", "Jackson", "William", "Carter", "Owen", "David", "Aiden", "Josiah", "Luke", "Julian", "Santiago", "Ezekiel", "Isaiah", "Waylon", "Miles", "Isaac", "John", "Logan", "Matthew", "Jacob", "Caleb", "Jayden", "Roman", "Joseph", "Nathan", "Anthony", "Cooper", "Enzo", "Weston", "Nolan", "Thomas", "Adam", "Eli", "Lincoln", "Micah", "Silas", "Amir", "Joshua", "Rowan", "Beau", "Atlas", "Wesley", "Luka", "Jaxon", "Jeremiah", "Adrian", "Xavier", "Walker", "Cameron", "Christopher", "Colton", "Charlie", "Bennett", "Brooks", "Myles", "Andrew", "Jace", "River", "Ryan", "Zion", "Easton", "Everett", "Axel", "Parker", "Greyson", "Hunter", "Christian", "Max", "Adriel")
@@ -94,7 +95,7 @@ summarize_day <- function(day_data){
   day_data_for_summary <- day_data %>%
     select(-sender) %>%
     rename(sender = anon_names)
-  
+  }
 
   day_data_string <- paste(
     capture.output(print(day_data_for_summary, row.names = FALSE)),  # Convert dataframe to text
@@ -129,7 +130,7 @@ summarize_day <- function(day_data){
 
   # Create the JSON payload
   payload <- list(
-    model = "gpt-4o-mini", # Changed from gpt-4o-mini to gpt-4
+    model = "gpt-5-nano", # Changed from gpt-4o-mini to gpt-4
     messages = list(
       list(role = "user", content = prompt)
     )
@@ -162,12 +163,13 @@ summarize_day <- function(day_data){
     
     # Find all the anonymous names and replace with the originals to send up to the FE.
 
+    if(anon_names){
     for(i in c(1:nrow(sender_names_map))){
 
       parsed_message$summary <- str_replace_all(parsed_message$summary, paste0("\\b", sender_names_map$anon_names[i], "\\b"), sender_names_map$sender[i])
 
     }
-    
+    }
     
     return(parsed_message)
 
